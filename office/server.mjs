@@ -5,7 +5,7 @@ import {internalDocumentUrl} from './document-url.mjs';
 const secret=process.env.JWT_SECRET;
 if(!secret)throw new Error('JWT_SECRET is required');
 const origins=new Set(['https://folio.getunio.dev','http://localhost:1420','http://127.0.0.1:1420','http://tauri.localhost','tauri://localhost']);
-const base='/data';await mkdir(base,{recursive:true});
+const base=process.env.FOLIO_EDITOR_DATA||'/data';await mkdir(base,{recursive:true});
 const sign=payload=>{const header=Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url');const body=Buffer.from(JSON.stringify(payload)).toString('base64url');const data=header+'.'+body;return data+'.'+createHmac('sha256',secret).update(data).digest('base64url');};
 function verify(token){const parts=String(token||'').split('.');if(parts.length!==3)throw Error('Invalid signature');const expected=createHmac('sha256',secret).update(parts[0]+'.'+parts[1]).digest();const received=Buffer.from(parts[2],'base64url');if(received.length!==expected.length||!timingSafeEqual(received,expected))throw Error('Invalid signature');const header=JSON.parse(Buffer.from(parts[0],'base64url'));if(header.alg!=='HS256')throw Error('Invalid algorithm');return JSON.parse(Buffer.from(parts[1],'base64url'));}
 async function body(req,max=100*1024*1024){const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>max)throw Error('File too large');chunks.push(chunk);}return Buffer.concat(chunks);}
@@ -49,10 +49,13 @@ const server=http.createServer(async(req,res)=>{const url=new URL(req.url,'http:
       return json({error:0});
     }
     if(action==='document'||action==='saved'){const bytes=await readFile(filePath(id));res.writeHead(200,{'Content-Type':'application/octet-stream','Content-Length':bytes.length,'Cache-Control':'no-store'});return res.end(bytes);}
+    if(action==='status'&&req.method==='GET'){
+      if(req.headers['x-folio-request']!=='editor')return json({error:'Request denied'},403);
+      return json({revision:meta.revision,savedAt:meta.savedAt});
+    }
     if(!origin||req.headers['x-folio-request']!=='editor')return json({error:'Request denied'},403);
-    if(action==='status')return json({revision:meta.revision,savedAt:meta.savedAt});
     if(action==='save'&&req.method==='POST'){const command={c:'forcesave',key:meta.key};const response=await fetch('http://documentserver/coauthoring/CommandService.ashx',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...command,token:sign(command)})});return json(await response.json());}
     return json({error:'Not found'},404);
   }catch(error){console.error(error.message);return json({error:error.message},500);}
 });
-server.listen(1421,'0.0.0.0',()=>console.log('Folio editor bridge ready'));
+server.listen(Number(process.env.PORT||1421),'0.0.0.0',()=>console.log('Folio editor bridge ready'));

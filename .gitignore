@@ -1,0 +1,51 @@
+# Dependencies and generated output
+node_modules/
+dist/
+build/
+target/
+*.tsbuildinfo
+__pycache__/
+*.py[cod]
+.npm-cache/
+
+# Secrets and machine-specific configuration
+.env
+.env.*
+!.env.example
+*.local
+*.local.*
+.npmrc
+.pypirc
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.keystore
+.ssh/
+.aws/
+.codex/
+.agents/
+.vscode/
+.idea/
+
+# User documents, application state, and backups
+.folio-data/
+.folio-qa-data/
+.test-server-data*/
+uploads/
+data/
+backups/
+*.db
+*.db-*
+*.sqlite
+*.sqlite*
+*.sql
+
+# Runtime and OS files
+*.log
+*.pid
+.DS_Store
+Thumbs.db
+Desktop.ini

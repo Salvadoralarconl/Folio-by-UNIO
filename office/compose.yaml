@@ -1,0 +1,45 @@
+name: folio-office
+services:
+  documentserver:
+    image: onlyoffice/documentserver:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"
+    environment:
+      JWT_ENABLED: "true"
+      JWT_SECRET: ${JWT_SECRET:?Run setup first}
+      JWT_HEADER: Authorization
+      ALLOW_PRIVATE_IP_ADDRESS: "true"
+    volumes:
+      - office-data:/var/www/onlyoffice/Data
+      - office-logs:/var/log/onlyoffice
+      - office-cache:/var/lib/onlyoffice
+      - office-db:/var/lib/postgresql
+    shm_size: 1gb
+  bridge:
+    image: node:24-alpine
+    restart: unless-stopped
+    working_dir: /app
+    command: ["node", "server.mjs"]
+    ports:
+      - "127.0.0.1:1421:1421"
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?Run setup first}
+    volumes:
+      - ./server.mjs:/app/server.mjs:ro
+      - editor-files:/data
+    depends_on:
+      - converter
+  converter:
+    build:
+      context: .
+      dockerfile: converter.Dockerfile
+    restart: unless-stopped
+    expose:
+      - "1422"
+volumes:
+  office-data:
+  office-logs:
+  office-cache:
+  office-db:
+  editor-files:

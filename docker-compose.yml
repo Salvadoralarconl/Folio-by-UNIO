@@ -1,0 +1,75 @@
+services:
+  folio:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1420:80"
+    depends_on:
+      - bridge
+      - api
+
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    working_dir: /app
+    command: ["node", "server.mjs"]
+    environment:
+      FOLIO_DATA: /data
+      PORT: "1423"
+      OCR_LANGUAGES: ${OCR_LANGUAGES:-eng}
+      OCR_MAX_PAGES: ${OCR_MAX_PAGES:-50}
+      VERSION_RETENTION: ${VERSION_RETENTION:-50}
+      TRASH_RETENTION_DAYS: ${TRASH_RETENTION_DAYS:-30}
+    volumes:
+      - folio-data:/data
+
+  documentserver:
+    image: onlyoffice/documentserver:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"
+    environment:
+      JWT_ENABLED: "true"
+      JWT_SECRET: ${JWT_SECRET:?Copy .env.example to .env and set JWT_SECRET}
+      JWT_HEADER: Authorization
+      ALLOW_PRIVATE_IP_ADDRESS: "true"
+    volumes:
+      - office-data:/var/www/onlyoffice/Data
+      - office-logs:/var/log/onlyoffice
+      - office-cache:/var/lib/onlyoffice
+      - office-db:/var/lib/postgresql
+    shm_size: 1gb
+
+  bridge:
+    image: node:24-alpine
+    restart: unless-stopped
+    working_dir: /app
+    command: ["node", "server.mjs"]
+    ports:
+      - "127.0.0.1:1421:1421"
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?Copy .env.example to .env and set JWT_SECRET}
+    volumes:
+      - ./office/server.mjs:/app/server.mjs:ro
+      - editor-files:/data
+    depends_on:
+      - documentserver
+      - converter
+
+  converter:
+    build:
+      context: ./office
+      dockerfile: converter.Dockerfile
+    restart: unless-stopped
+    expose:
+      - "1422"
+
+volumes:
+  folio-data:
+  office-data:
+  office-logs:
+  office-cache:
+  office-db:
+  editor-files:

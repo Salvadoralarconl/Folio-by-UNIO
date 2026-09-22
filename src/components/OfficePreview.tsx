@@ -2,14 +2,15 @@ import {Component,useEffect,useId,useRef,useState,type ReactNode} from 'react';
 import {LoaderCircle} from 'lucide-react';
 import type {Entry,Repository} from '../types';
 
-const endpoint='http://localhost:1421';
+const endpoint=window.location.hostname==='tauri.localhost'?'http://localhost:1421':'/bridge';
+const documentServer='https://office.getunio.dev';
 const headers={'X-Folio-Request':'editor'};
 type EditorInstance={destroyEditor():void};
 type Session={config:Record<string,unknown>};
 declare global { interface Window {DocsAPI?:{DocEditor:new(id:string,config:Record<string,unknown>)=>EditorInstance};} }
 async function request(path:string,options:RequestInit={}){const response=await fetch(endpoint+path,{...options,headers:{...headers,...options.headers}});const result=await response.json();if(!response.ok)throw Error(result.error||'The local editor is unavailable.');return result;}
 let scriptPromise:Promise<void>|undefined;
-function loadEditor(){if(window.DocsAPI)return Promise.resolve();return scriptPromise ||= new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='http://localhost:8080/web-apps/apps/api/documents/api.js';script.onload=()=>resolve();script.onerror=()=>{scriptPromise=undefined;script.remove();reject(Error('ONLYOFFICE is not running.'));};document.head.appendChild(script);});}
+function loadEditor(){if(window.DocsAPI)return Promise.resolve();return scriptPromise ||= new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=documentServer+'/web-apps/apps/api/documents/api.js';script.onload=()=>resolve();script.onerror=()=>{scriptPromise=undefined;script.remove();reject(Error('ONLYOFFICE is unavailable.'));};document.head.appendChild(script);});}
 
 type Props={entry:Entry;repo:Repository;theme:'light'|'dark';fallback:ReactNode};
 function OfficePreviewInner({entry,repo,theme,fallback}:Props){

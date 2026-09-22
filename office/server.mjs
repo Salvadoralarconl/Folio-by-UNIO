@@ -3,7 +3,7 @@ import {randomBytes,createHmac,timingSafeEqual} from 'node:crypto';
 import {mkdir,readFile,writeFile,rename} from 'node:fs/promises';
 const secret=process.env.JWT_SECRET;
 if(!secret)throw new Error('JWT_SECRET is required');
-const origins=new Set(['http://localhost:1420','http://127.0.0.1:1420','http://tauri.localhost','tauri://localhost']);
+const origins=new Set(['https://folio.getunio.dev','http://localhost:1420','http://127.0.0.1:1420','http://tauri.localhost','tauri://localhost']);
 const base='/data';await mkdir(base,{recursive:true});
 const sign=payload=>{const header=Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url');const body=Buffer.from(JSON.stringify(payload)).toString('base64url');const data=header+'.'+body;return data+'.'+createHmac('sha256',secret).update(data).digest('base64url');};
 function verify(token){const parts=String(token||'').split('.');if(parts.length!==3)throw Error('Invalid signature');const expected=createHmac('sha256',secret).update(parts[0]+'.'+parts[1]).digest();const received=Buffer.from(parts[2],'base64url');if(received.length!==expected.length||!timingSafeEqual(received,expected))throw Error('Invalid signature');const header=JSON.parse(Buffer.from(parts[0],'base64url'));if(header.alg!=='HS256')throw Error('Invalid algorithm');return JSON.parse(Buffer.from(parts[1],'base64url'));}

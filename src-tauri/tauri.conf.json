@@ -6,7 +6,7 @@
   "build": { "beforeDevCommand": "npm run dev", "devUrl": "http://127.0.0.1:1420", "beforeBuildCommand": "npm run build", "frontendDist": "../dist" },
   "app": {
     "windows": [{ "title": "Folio", "width": 1440, "height": 940, "minWidth": 720, "minHeight": 550, "backgroundColor": "#eae8e3", "dragDropEnabled": false }],
-    "security": { "csp": "default-src 'self'; script-src 'self' http://localhost:8080; worker-src 'self' blob:; connect-src ipc: http://ipc.localhost 'self' http://localhost:1421; frame-src 'self' http://localhost:8080; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'" }
+    "security": { "csp": "default-src 'self'; script-src 'self' https://office.getunio.dev; worker-src 'self' blob:; connect-src ipc: http://ipc.localhost 'self' http://localhost:1421 https://office.getunio.dev wss://office.getunio.dev; frame-src 'self' https://office.getunio.dev; img-src 'self' blob: data: https://office.getunio.dev; style-src 'self' 'unsafe-inline' https://office.getunio.dev; font-src 'self' data: https://office.getunio.dev; object-src 'none'" }
   },
   "bundle": { "active": true, "targets": ["nsis"], "shortDescription": "A local home for your documents", "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"] }
 }

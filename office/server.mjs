@@ -1,6 +1,7 @@
 import http from 'node:http';
 import {randomBytes,createHmac,timingSafeEqual} from 'node:crypto';
 import {mkdir,readFile,writeFile,rename} from 'node:fs/promises';
+import {internalDocumentUrl} from './document-url.mjs';
 const secret=process.env.JWT_SECRET;
 if(!secret)throw new Error('JWT_SECRET is required');
 const origins=new Set(['https://folio.getunio.dev','http://localhost:1420','http://127.0.0.1:1420','http://tauri.localhost','tauri://localhost']);
@@ -40,9 +41,7 @@ const server=http.createServer(async(req,res)=>{const url=new URL(req.url,'http:
       const raw=JSON.parse((await body(req,1024*1024)).toString());const token=raw.token||String(req.headers.authorization||'').replace(/^Bearer /,'');const signed=verify(token);const data=signed.payload||signed;
       if(data.key!==meta.key)throw Error('Document key mismatch');
       if([2,6].includes(data.status)){
-        const source=new URL(data.url);if(source.protocol!=='http:')throw Error('Unexpected document download URL');
-        if(['localhost','127.0.0.1'].includes(source.hostname)&&source.port==='8080'){source.hostname='documentserver';source.port='';}
-        if(source.hostname!=='documentserver'||source.port)throw Error('Unexpected document download URL');
+        const source=internalDocumentUrl(data.url);
         const response=await fetch(source,{redirect:'error',signal:AbortSignal.timeout(60000)});if(!response.ok)throw Error('Document download failed');
         const bytes=Buffer.from(await response.arrayBuffer());if(bytes.length>100*1024*1024)throw Error('Saved file exceeds limit');
         await atomic(filePath(id),bytes);meta.revision++;meta.savedAt=Date.now();await atomic(metaPath(id),JSON.stringify(meta));

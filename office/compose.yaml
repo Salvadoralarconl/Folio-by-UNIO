@@ -27,6 +27,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:?Run setup first}
     volumes:
       - ./server.mjs:/app/server.mjs:ro
+      - ./document-url.mjs:/app/document-url.mjs:ro
       - editor-files:/data
     depends_on:
       - converter

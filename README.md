@@ -1,4 +1,20 @@
-# Folio
+# Folio by UNIO
+
+A local-first document management workspace for organizing, previewing, searching, and reviewing files.
+
+Built with **React, TypeScript, Vite, and a Tauri 2 desktop shell**, with a local authenticated API and optional Docker-based office integrations.
+
+## Project overview
+
+- Three-panel workspace with folder navigation, file lists, and document previews.
+- Document search, tags, metadata, favorites, and saved searches.
+- Admin, Editor, and Reader roles with department and Personal workspaces.
+- Version history, review workflows, comments, and a recoverable recycle bin.
+- Browser and desktop development paths, plus optional locally hosted office services.
+
+This repository includes implementation, tests, and setup instructions. Feature limitations are documented below; this overview does not claim production deployment or independently verified production readiness.
+
+---
 
 A local-first document workspace based on the supplied three-panel design. React, TypeScript, Vite, and a Tauri 2 desktop shell. No cloud services are required.
 
